@@ -9,11 +9,14 @@
 
 set -e
 
+# 获取脚本所在目录的绝对路径
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # 设置 CLAUDE_PLUGIN_ROOT
-export CLAUDE_PLUGIN_ROOT="$HOME/ai/everything-claude-code"
+export CLAUDE_PLUGIN_ROOT="$SCRIPT_DIR"
 
 # ECC 目录
-ECC_ROOT="$HOME/ai/everything-claude-code"
+ECC_ROOT="$SCRIPT_DIR"
 
 echo "========================================"
 echo "  ECC 完整安装脚本"
@@ -25,11 +28,35 @@ echo ""
 # 检查 ECC 是否存在
 if [[ ! -d "$ECC_ROOT" ]]; then
     echo "错误: ECC 目录不存在"
-    echo "请先克隆: git clone https://github.com/affaan-m/everything-claude-code.git ~/ai/everything-claude-code"
+    echo "请先克隆: git clone https://github.com/woneway/everything-claude-code.git"
     exit 1
 fi
 
 cd "$ECC_ROOT"
+
+# ===== 配置环境变量 =====
+echo ""
+echo "=== 配置环境变量 ==="
+
+# 添加 CLAUDE_PLUGIN_ROOT 到 shell 配置
+ENV_LINE="export CLAUDE_PLUGIN_ROOT=\"$ECC_ROOT\""
+
+# 检测当前 shell 类型
+if [[ "$SHELL" == *zsh* ]]; then
+    RC_FILE="$HOME/.zshrc"
+elif [[ "$SHELL" == *bash* ]]; then
+    RC_FILE="$HOME/.bashrc"
+else
+    # 默认尝试 .bashrc
+    RC_FILE="$HOME/.bashrc"
+fi
+
+if ! grep -q "CLAUDE_PLUGIN_ROOT" "$RC_FILE" 2>/dev/null; then
+    echo "$ENV_LINE" >> "$RC_FILE"
+    echo "  CLAUDE_PLUGIN_ROOT: 已添加到 $RC_FILE"
+else
+    echo "  CLAUDE_PLUGIN_ROOT: 已存在，跳过"
+fi
 
 # ===== 创建目录 =====
 echo "=== 创建目录 ==="
@@ -161,14 +188,10 @@ echo "  安装完成！"
 echo "========================================"
 echo ""
 echo "后续步骤:"
-echo "  1. 设置 CLAUDE_PLUGIN_ROOT 环境变量:"
-echo "     echo 'export CLAUDE_PLUGIN_ROOT=\"$HOME/ai/everything-claude-code\"' >> ~/.zshrc"
-echo "     source ~/.zshrc"
-echo ""
-echo "  2. 配置 MCP API Key:"
+echo "  1. 配置 MCP API Key:"
 echo "     编辑 ~/.cursor/mcp.json"
 echo "     - GITHUB_PERSONAL_ACCESS_TOKEN"
 echo "     - FIRECRAWL_API_KEY"
 echo ""
-echo "  3. 重启 Cursor 和 Claude Code"
+echo "  2. 重启 Cursor 和 Claude Code"
 echo ""
